@@ -35,10 +35,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-            </intent-filter>
+            <!-- 注意：这里**不要**再声明 LAUNCHER / LEANBACK_LAUNCHER 过滤器。
+                 加了它，替身就会出现在电视的应用列表里（是个看不见界面的空壳，点进去像死机），
+                 而 HOME 解析只认上面那个 HOME 过滤器，跟它无关。 -->
         </activity>
     </application>
 </manifest>

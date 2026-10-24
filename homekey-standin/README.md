@@ -118,6 +118,14 @@ ClassNotFoundException: Didn't find class "com.gathin.tvhome.MainActivity"
 adb logcat -d | grep -c ClassNotFoundException     # 应该是 0
 ```
 
+### ⚠️ 别让它出现在电视的应用列表里
+
+早期版本里多写了一个 `MAIN + LEANBACK_LAUNCHER` 的 intent-filter，结果电视的应用栏里
+凭空多出一个「主页替身」图标——点进去黑屏（它本来就不画任何界面）。
+
+**HOME 解析只认 `MAIN + HOME` 那个 filter**，跟 LAUNCHER 无关。
+v102 起已删掉，替身只存在于系统里，不占桌面一个格子。
+
 ### 4. 验证
 
 ```bash

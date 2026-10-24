@@ -623,6 +623,7 @@ adb shell "dumpsys activity activities | grep -m1 topResumedActivity"
 | YouTube 转圈（仅第 5 阶段） | 代理没通 / IP 填错 | 确认代理地址与端口 |
 | TVBro 全白 | 主页漏 `https://` | 补全协议 |
 | 应用网格按 `→`/`←` 到行末行首不动 | Aerial 自身 `FocusRequester.Cancel` | 见 2.2C 打补丁 |
+| 应用栏里多出一个「主页替身」，点进去黑屏 | manifest 多写了 `LEANBACK_LAUNCHER` 过滤器 | 删掉该 filter 重装（HOME 只认 `MAIN+HOME`） |
 | 桌面每 150ms 崩一次、电视卡死 | 主页桥 manifest 的 Activity 名和编译的类不一致 | `pm uninstall --user 0 com.ts.launcher` 后重装正确包 |
 | 截图全黑 | 电视睡着了 | `input keyevent KEYCODE_WAKEUP` |
 | 截图是小米大时钟 | 屏保（约 30 秒） | 先 wakeup + HOME |
