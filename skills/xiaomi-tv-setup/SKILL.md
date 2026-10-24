@@ -15,7 +15,7 @@ metadata:
 > **你不是在念说明书，你是在当导游。**
 > 一次只推进一个阶段；每个阶段开头先把该问的问题问清楚，拿到答复再决定「执行」还是「跳过」；跳过必须说清楚后果。
 
-完整的单页图文（给用户自己看的版本）：<https://github.com/fadnejin/tv-terminator/blob/main/docs/quickstart.md>
+完整的单页图文（给用户自己看的版本）：<https://github.com/fandejin/tv-terminator/blob/main/docs/quickstart.md>
 
 ---
 
@@ -308,7 +308,7 @@ startActivity(i); finish();
 
 效果：系统把桥当默认桌面（认），但桥不渲染 → 实测连抓 3 帧**没有任何小米桌面画面**，直接落在 Aerial。
 
-**现成工程（推荐直接用）**：<https://github.com/fadnejin/tv-terminator/tree/main/homekey-standin>
+**现成工程（推荐直接用）**：<https://github.com/fandejin/tv-terminator/tree/main/homekey-standin>
 里面是 `build.sh`（不依赖 Gradle）+ 60 行源码 + 预编译 APK：
 
 ```bash
@@ -673,6 +673,44 @@ adb shell "dumpsys activity activities | grep -m1 topResumedActivity"
 | 截图全黑 | 电视睡着了 | `input keyevent KEYCODE_WAKEUP` |
 | 截图是小米大时钟 | 屏保（约 30 秒） | 先 wakeup + HOME |
 | Netflix 报设备不兼容 | 无 GMS / 无 Widevine | 外接认证盒子 |
+
+---
+
+## 附录 A · WSL 里操作电视的纪律（每条都踩过）
+
+**路径**
+1. **复制用 `/mnt/c/...`，安装用 `C:\...`**。两个方向别搞反：
+   - WSL 里 `cp x.apk 'C:\Users\<你>\x.apk'` 会把 `C:\...` 当成**文件名**，在当前目录
+     造一个叫 `C:\Users\<你>\x.apk` 的怪文件（看着像成功，其实哪也没去）
+   - `adb.exe` 是 Windows 程序，**不认识 `/mnt/c/`**，喂进去报 `failed to stat`
+2. **装之前必须 `md5sum` 对一遍**两边文件。`adb install -r` 报 `Success` 也可能装的是
+   旧包——它装的是 Windows 上那个文件，不是你以为的那个，且不会报错。
+
+**网络**
+3. **WSL 连不上电视端口**（8790 手机页面等）→ 用
+   `/mnt/c/Windows/System32/curl.exe`，走 Windows 网络栈。
+4. WSL 里 curl 访问内网会被 `http_proxy` 劫持 → 加 `--noproxy '*'`（用 Windows curl 则不受影响）。
+
+**探测界面**
+5. **uiautomator 抓不到 Compose 的文字**（图标 caption 全空），只能抓到时钟/日期。
+   判断「当前焦点是哪个 App」的可靠办法：**长按 OK 弹应用菜单，看标题**。
+   判断「顺序变没变」：**截图像素差**（dock 区域变化率 >40% 就是换了）。
+6. **`MENU` 键行为看焦点**：焦点在图标上 = 应用菜单（移到文件夹/隐藏/卸载）；
+   焦点不在图标上 = 控制中心（信号源/网络/设置/亮度/个性化）。
+
+**Aerial 手机页面**
+7. 端口 8790，**token 每次 App 重启都变**，只能重开「MENU → 个性化」截图 → 解码二维码
+   （`zxing-cpp` + Pillow 解，装法：`uv venv` + `uv pip install zxing-cpp pillow`）。
+   常用接口：
+   - `POST /<token>/api/weather/city` `name=<URL编码城市>`
+   - `POST /<token>/api/layout` `op=hide|move|folder&key=<包名>`
+   - `GET  /<token>/api/state` 拿桌面全部配置与顺序
+
+**构建**
+8. 本机 gradle 在 `$HOME/tools/gradle-8.14.3/bin/gradle`，用绝对路径别用 `./gradlew`
+   （wrapper 会卡在下载 Gradle）。构建约 4m50s。
+9. 装机用 `install -r` 前，`versionCode` 必须比已装的高，否则装不上。
+   同签名（都是自己的 debug key）时数据保留；一旦 `pm uninstall` 过，设置全丢。
 
 ---
 

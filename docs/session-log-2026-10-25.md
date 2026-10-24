@@ -176,7 +176,7 @@ adb shell appops set app.orchard.tv GET_USAGE_STATS allow
 
 ## 四、留下的资产
 
-### 仓库 `tv-terminator`（https://github.com/fadnejin/tv-terminator）
+### 仓库 `tv-terminator`（https://github.com/fandejin/tv-terminator）
 
 ```
 README.md                      项目总表（5 个项目行）
