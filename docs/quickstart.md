@@ -131,7 +131,9 @@ adb install -r TVBro.apk
 
 ---
 
-## ✅ 第 7 步：让电视能上 YouTube（需要电脑开代理）
+## ✅ 第 7 步：让电视能上 YouTube（不需要看 YouTube 就整步跳过）
+
+> 跳过不影响前面和后面的任何步骤。要看 YouTube 才需要往下做。
 
 1. 电脑上的代理软件打开 **「允许局域网连接 / Allow LAN」**
 2. 查出电脑的局域网 IP（`ipconfig` 里的 IPv4 地址，比如 `<电脑IP>`）

@@ -12,6 +12,20 @@
 
 👉 **[小米电视改造全记录（完整版）](docs/xiaomi-tv.md)**
 
+## 🤖 给 Hermes / AI 助手用的 Skill
+
+不想自己照着念？把这份 skill 丢进 AI 助手的技能目录，它会**像导游一样一步一步带你做**——每步先问你问题，你说跳过它就告诉你后果。
+
+👉 **[skills/xiaomi-tv-setup](skills/xiaomi-tv-setup/SKILL.md)**
+
+安装方式（Hermes）：
+
+```bash
+cp -r skills/xiaomi-tv-setup ~/.hermes/skills/devops/
+```
+
+装好后直接说「我想改造电视」，它就会启动导引：体检 → 去广告 → 选桌面（带效果图二选一）→ 影视 → 抖音 → YouTube → Netflix → 验收。
+
 ## 📦 项目索引
 
 | 项目 | 说明 | 状态 |
