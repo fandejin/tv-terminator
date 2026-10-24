@@ -100,6 +100,24 @@ adb shell cmd package set-home-activity --user 0 \
 > 注意 Activity 名要和构建时一致。构建脚本默认用 `com.homekey.standin.MainActivity`；
 > 如果你的目标是复用旧桌面的组件名，用 `--activity` 指定。
 
+### ⚠️ 一个必须知道的坑（我踩过）
+
+`--activity` 写的名字，**必须和 jar 里编出来的类完全一致**。
+早期版本的脚本只替换了 manifest 里的名字、没改 Java 包名，结果：
+
+```
+ClassNotFoundException: Didn't find class "com.gathin.tvhome.MainActivity"
+```
+
+系统拉不起桌面 → **无限崩溃重启**（每 150ms 起一次进程），整台电视直接卡死，遥控器完全没反应。
+
+现在的 `build.sh` 已经会**按 `--activity` 自动生成对应包名的 Java 类**，不会再错。
+但如果哪天你手改了 manifest，记得验证一句：
+
+```bash
+adb logcat -d | grep -c ClassNotFoundException     # 应该是 0
+```
+
 ### 4. 验证
 
 ```bash

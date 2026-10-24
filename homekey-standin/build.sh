@@ -69,17 +69,29 @@ BUILD="$HERE/.build"
 rm -rf "$BUILD"
 mkdir -p "$BUILD/src" "$BUILD/cls" "$BUILD/dex" "$OUT"
 
+# ---------- 由 --activity 反推 Java 包名/类名 ----------
+# 必须让 javac 编出来的类 <==> manifest 里声明的 Activity 完全一致，
+# 否则系统一拉起就 ClassNotFoundException，进而无限崩溃重启（电视直接卡死）
+ACT_PKG="${ACTIVITY%.*}"
+ACT_SIMPLE="${ACTIVITY##*.}"
+[ -z "$ACT_PKG" ] || [ "$ACT_PKG" = "$ACTIVITY" ] && { echo "--activity 必须写全名，如 com.foo.bar.MainActivity" >&2; exit 1; }
+
 # ---------- 填充占位符 ----------
 sed -e "s|__PKG__|$PKG|g" -e "s|__ACTIVITY__|$ACTIVITY|g" -e "s|__VERSION_CODE__|$VERSION_CODE|g" \
     "$HERE/manifest/AndroidManifest.xml" > "$BUILD/AndroidManifest.xml"
 
-sed -e "s|__TARGET_PKG__|$TARGET_PKG|g" -e "s|__TARGET_CLS__|$TARGET_CLS|g" \
-    "$HERE/src/com/homekey/standin/MainActivity.java" > "$BUILD/src/MainActivity.java"
+SRC_DIR="$BUILD/src/$(echo "$ACT_PKG" | tr '.' '/')"
+mkdir -p "$SRC_DIR"
+
+sed -e "s|^package com.homekey.standin;|package $ACT_PKG;|" \
+    -e "s|public class MainActivity|public class $ACT_SIMPLE|" \
+    -e "s|__TARGET_PKG__|$TARGET_PKG|g" -e "s|__TARGET_CLS__|$TARGET_CLS|g" \
+    "$HERE/src/com/homekey/standin/MainActivity.java" > "$SRC_DIR/$ACT_SIMPLE.java"
 
 # ---------- 编译 ----------
-javac -source 8 -target 8 -bootclasspath "$ANDROID_JAR" -d "$BUILD/cls" "$BUILD/src/MainActivity.java" 2>&1 | grep -v "bootstrap class path" || true
+javac -source 8 -target 8 -bootclasspath "$ANDROID_JAR" -d "$BUILD/cls" "$SRC_DIR/$ACT_SIMPLE.java" 2>&1 | grep -v "bootstrap class path" || true
 
-"${BT}d8" --lib "$ANDROID_JAR" --min-api 21 --output "$BUILD/dex" "$BUILD/cls"/com/homekey/standin/*.class
+"${BT}d8" --lib "$ANDROID_JAR" --min-api 21 --output "$BUILD/dex" "$BUILD/cls/$(echo "$ACT_PKG" | tr '.' '/')"/*.class
 
 "${BT}aapt2" link -I "$ANDROID_JAR" --manifest "$BUILD/AndroidManifest.xml" -o "$BUILD/base.apk"
 
