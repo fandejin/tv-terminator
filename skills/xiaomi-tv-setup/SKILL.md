@@ -398,6 +398,29 @@ Aerial 的天气默认按**出口 IP** 定位——挂了代理就显示东京�
 > 顺手记住：`/api/state` 能看到桌面全部配置；`/api/weather/auto` 是改回自动定位。
 > token 每次 App 重启都会变，过期就重新截图解一次。
 
+### 2.2D Aerial 按「最近使用」排序（本地补丁，Aerial 原生没有）
+
+Aerial 的顺序只认手工排列，`AppCatalog` 里没有任何按使用时间排序的逻辑。
+要让图标按「最后打开时间」排：
+
+1. `HomeViewModel.kt` 的 `arrange()` 末尾过一道 `inRecentOrder(...)`：
+   应用（`source == null && folder == null`）按 `lastTimeUsed` 倒序占原来的坑，
+   输入源和文件夹位置不动，没用过的应用排后面且保持原相对顺序。
+2. `recentUse()` 用 `UsageStatsManager.queryUsageStats(INTERVAL_WEEKLY, now-30d, now)`
+   取 `lastTimeUsed`，两秒缓存；**拿不到数据就直接返回原顺序**（不报错不卡）。
+3. `MainActivity.resumeWork()` 加 `vm.refreshRecentOrder()`，从应用回桌面时刷新。
+4. `versionCode` 必须 +1，否则 `install -r` 装不上。
+
+**⚠️ 必须授权，否则等于没装**：
+```bash
+adb shell appops set app.orchard.tv GET_USAGE_STATS allow
+```
+`PACKAGE_USAGE_STATS` 是特殊权限，`pm grant` 给不了，只能 appops 或系统设置里点。
+
+实测：打开影视仓 → 回桌面 → 首个图标=影视仓；打开 SmartTube → 首个=SmartTube；
+未授权时顺序与手工排列像素级一致。
+详细 diff → 仓库 `docs/aerial-recent-order.md`。
+
 ### 2.2.1 重启后掉了怎么办（必讲）
 
 小米系统偶尔会把非系统应用的**无障碍服务悄悄关掉**（系统清理、升级、恢复出厂都会），表现为「昨天好好的，今天 Home 又没反应」。
