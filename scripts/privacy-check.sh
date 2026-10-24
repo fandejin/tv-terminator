@@ -11,6 +11,13 @@ GREP_OPTS=(--exclude-dir=.git --exclude-dir=node_modules
 hits=0
 say() { echo "❌ $1"; hits=$((hits+1)); }
 
+# 0. 密钥/密码文件本身就不许进仓库（名字级拦截，最狠的一条）
+BAD_FILES=$(git ls-files | grep -Ei '(^|/)(\.env(\..*)?|id_rsa|id_ed25519|.*\.pem|.*\.key|.*\.p12|.*\.jks|.*\.keystore|\.netrc|\.npmrc|\.pypirc)$' || true)
+if [ -n "$BAD_FILES" ]; then
+  echo "$BAD_FILES"
+  say "仓库里跟踪了密钥/密码类文件（.env/.pem/.key/.jks/keystore 等），必须移除"
+fi
+
 # 1. 内网 IP（真实的才拦；127.0.0.1 和占位符不算）
 IP_RE='\b(192\.168\.[0-9]{1,3}\.[0-9]{1,3}|10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|172\.(1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}\.[0-9]{1,3})\b'
 if grep -rnEI "$IP_RE" . "${GREP_OPTS[@]}" >/dev/null 2>&1; then
@@ -25,8 +32,8 @@ if grep -rnEI "$PATH_RE" . "${GREP_OPTS[@]}" >/dev/null 2>&1; then
   say "发现本机绝对路径/用户名（应写成 ~/ 或 <路径>）"
 fi
 
-# 3. 凭据类（只认“有值”的，不认文档里提到这些词）
-SECRET_RE='(ssid|wifi_name|wifi-name|password|passwd|serialno|android_id)\s*[=:]\s*["'"'"']?[A-Za-z0-9_@#$%^&*.-]{3,}|(ghp_|gho_|github_pat_|sk-|AKIA)[A-Za-z0-9_]{10,}'
+# 3. 凭据类：token / 私钥 / JWT / 带密码的 URL / 赋值型密码
+SECRET_RE='(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,}|sk-[A-Za-z0-9]{20,}|sk-ant-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|xox[baprs]-[0-9A-Za-z-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|[a-z][a-z0-9+.-]*://[^[:space:]/:@]+:[^[:space:]/@]{3,}@|(ssid|wifi_name|password|passwd|pwd|secret|api[_-]?key|access[_-]?token|serialno|android_id)[[:space:]]*[=:][[:space:]]*["'"'"']?[A-Za-z0-9!@#$%^&*_+.-]{6,}'
 if grep -rnEI "$SECRET_RE" . "${GREP_OPTS[@]}" >/dev/null 2>&1; then
   grep -rnEI "$SECRET_RE" . "${GREP_OPTS[@]}" | sed 's/=.*/=<已隐藏>/' | head -10
   say "发现疑似凭据/WiFi 名/设备号"

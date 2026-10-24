@@ -1,0 +1,19 @@
+# 密钥/凭据类：绝不能进公开仓库
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+.netrc
+.npmrc
+.pypirc
+credentials.json
+secrets.json
+
+# 本机构建产物
+*.idsig
+/tmp/
