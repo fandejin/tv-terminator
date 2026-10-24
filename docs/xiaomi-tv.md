@@ -111,7 +111,79 @@ adb shell cmd package set-home-activity --user 0 com.mitv.tvhome/<原Activity名
 
 ---
 
-## 六、系统精简（可选，有风险）
+## 六、Home 键失灵 / 功能键没反应（小米遥控器必看）
+
+这一步最容易被忽略，也是「换了桌面之后遥控器突然不灵」的头号原因。
+
+### 现象
+
+- 按遥控器 **Home（首页）键**，没反应，或者又跳回小米广告桌面
+- 按遥控器 **设置键**，没反应
+- 想退出手动打开的 App 回桌面，只能一层层按返回
+
+### 原因
+
+小米/红米电视遥控器的 Home 键，发出的不是标准的 `KEYCODE_HOME`，而是 **`KEYCODE_ALL_APPS`（键值 284）**。
+
+Android TV 9 的系统逻辑是：这个按键**只投给系统自带桌面**。所以一旦你把 `com.mitv.tvhome` 停用，这个按键就没人接收了 —— 按下去什么都不发生。
+
+### 解决：开启桌面自带的无障碍服务
+
+定制桌面里带了一个 `HomeKeyService`，专门接住这个按键，把它转成「回桌面」。
+
+**先看当前已启用的无障碍服务**（不要直接覆盖，否则会把小爱同学之类的服务关掉）：
+
+```bash
+adb shell settings get secure enabled_accessibility_services
+```
+
+**把新服务追加到末尾**（用英文冒号 `:` 分隔）：
+
+```bash
+# 注意包名是 com.ts.launcher，类名是 com.gathin.tvhome.HomeKeyService
+adb shell settings put secure enabled_accessibility_services "原有服务1:原有服务2:com.ts.launcher/com.gathin.tvhome.HomeKeyService"
+adb shell settings put secure accessibility_enabled 1
+```
+
+举例，如果原来只有小爱同学：
+
+```bash
+adb shell settings put secure enabled_accessibility_services "com.xiaomi.voicecontrol/.VoiceAccessibilityService:com.ts.launcher/com.gathin.tvhome.HomeKeyService"
+adb shell settings put secure accessibility_enabled 1
+```
+
+### 验证
+
+```bash
+# 先随便打开一个 App，再按 Home
+adb shell input keyevent 3     # 标准 Home，正常应回桌面
+adb shell input keyevent 284   # 小米遥控器 Home，开启服务后也应回桌面
+```
+
+也可以直接 `adb shell dumpsys accessibility | grep -i "Bound services"`，能看到 `Home button` 就说明服务挂上了。
+
+> 💡 无障碍服务同时也接管了遥控器的**设置键**——没有它，停用小米桌面后设置键同样会失灵。
+
+### 想关掉
+
+```bash
+adb shell settings put secure enabled_accessibility_services "com.xiaomi.voicecontrol/.VoiceAccessibilityService"
+```
+
+### 电视重启后又变回小米桌面？
+
+部分固件（尤其小米/极米）会在开机或按某些按键时**把原桌面重新拉起来**。处理办法：
+
+1. 确认 `adb shell pm list packages -d | grep tvhome` 里还有 `com.mitv.tvhome`（还是停用状态）
+2. 如果没有了，重新 `pm disable-user --user 0 com.mitv.tvhome`
+3. 再把默认桌面设一次：
+   ```bash
+   adb shell cmd package set-home-activity --user 0 com.ts.launcher/com.gathin.tvhome.MainActivity
+   ```
+
+---
+
+## 七、系统精简（可选，有风险）
 
 停用的是小米**自家服务**，与第三方 App 无关：
 
@@ -146,14 +218,14 @@ adb shell pm enable com.mitv.tvhome
 
 ---
 
-## 七、YouTube（SmartTube + 电脑代理）
+## 八、YouTube（SmartTube + 电脑代理）
 
 电视本身没有梯子，借电脑的 clash 出去：
 
 ```bash
 # 1. 电脑 clash 打开「允许局域网连接 / Allow LAN」，记下 Windows 的局域网 IP
 # 2. 电视设全局 HTTP 代理
-adb shell settings put global http_proxy <电视IP>:7897
+adb shell settings put global http_proxy <电脑局域网IP>:7897
 
 # 查看当前代理
 adb shell settings get global http_proxy
@@ -169,7 +241,7 @@ adb shell settings put global http_proxy :0
 
 ---
 
-## 八、电视看抖音（TVBro）
+## 九、电视看抖音（TVBro）
 
 ### 设置主页
 
@@ -195,7 +267,7 @@ https://www.douyin.com
 
 ---
 
-## 九、踩坑清单
+## 十、踩坑清单
 
 | 坑 | 现象 | 解法 |
 |---|---|---|
@@ -211,7 +283,7 @@ https://www.douyin.com
 
 ---
 
-## 十、恢复出厂状态
+## 十一、恢复出厂状态
 
 ```bash
 # 恢复所有停用包

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 小米/Android TV 一键配置脚本
 # 用法: ./tv-setup.sh <电视IP> [代理IP:端口]
-# 示例: ./tv-setup.sh <电视IP> <电视IP>:7897
+# 示例: ./tv-setup.sh <电视IP> <电脑IP>:7897
 #
 # 只做四件事：连设备 → 查架构 → 装 APK → 设代理
 # 不做任何删除操作，所有命令可回滚。
@@ -13,7 +13,7 @@ PROXY="${2:-}"
 
 if [[ -z "$IP" ]]; then
   echo "用法: $0 <电视IP> [代理IP:端口]"
-  echo "示例: $0 <电视IP> <电视IP>:7897"
+  echo "示例: $0 <电视IP> <电脑IP>:7897"
   exit 1
 fi
 
