@@ -346,6 +346,36 @@ adb shell cat /proc/loadavg                       # 正常应在 1~2
 
 **回退**：卸载 `com.ts.launcher` → 系统自动退回小米桌面。
 
+### 2.2C Aerial 应用网格方向键：行末卡住（自打补丁，可选）
+
+**症状**：应用网格里焦点挪到一行最右，再按 `→` 不动；行首按 `←` 也不动。
+不是电视、不是遥控器——是 Aerial 自己写死的焦点逻辑。
+
+**根因**（v1.47 源码 `ui/home/AppTile.kt`）：
+
+```kotlin
+.focusProperties { if (rowEnd) right = FocusRequester.Cancel }
+```
+
+行末直接把 right 取消，所以焦点留在原地。
+
+**解法**：给 `AppTile` 加 `rowStart / nextRowFirst / prevRowLast` 三个参数，
+`HomeScreen` 调用处按 `index % COLUMNS` 传入邻居的 requester：
+
+```kotlin
+if (rowEnd) right = nextRowFirst ?: FocusRequester.Cancel
+if (rowStart && prevRowLast != null) left = prevRowLast
+```
+
+完整 diff、编译步骤、国内网络绕法见仓库 `docs/aerial-row-wrap.md`；
+上游 issue #516 / PR #522。**实测**：行末 `→` → 下一行第一个，行首 `←` → 上一行最后一个，最后一行仍保持 Cancel（不跳状态条）。
+
+**自编译三条硬提醒**：
+
+1. `git checkout v1.47` —— **tag 必须和电视上装的版本一致**，否则 UI 会变。
+2. 国内网络：Gradle 发行包从 `mirrors.cloud.tencent.com/gradle/` 下；依赖在 `settings.gradle.kts` 里把 `maven.aliyun.com` 放最前；`compileSdk=36` 要先 `sdkmanager "platforms;android-36"`。
+3. 没有官方签名密钥 → 只能用 debug key 签，**装之前必须卸载原版**，设置（壁纸/天气/Dock 顺序）会清空。改完先备份 APK。
+
 ### 2.2.1 重启后掉了怎么办（必讲）
 
 小米系统偶尔会把非系统应用的**无障碍服务悄悄关掉**（系统清理、升级、恢复出厂都会），表现为「昨天好好的，今天 Home 又没反应」。
@@ -592,6 +622,8 @@ adb shell "dumpsys activity activities | grep -m1 topResumedActivity"
 | Aerial 按 Home 进了小米桌面 | 给 Aerial 设了 HOME role，守护不拦了 | `cmd role remove-role-holder android.app.role.HOME app.orchard.tv` |
 | YouTube 转圈（仅第 5 阶段） | 代理没通 / IP 填错 | 确认代理地址与端口 |
 | TVBro 全白 | 主页漏 `https://` | 补全协议 |
+| 应用网格按 `→`/`←` 到行末行首不动 | Aerial 自身 `FocusRequester.Cancel` | 见 2.2C 打补丁 |
+| 桌面每 150ms 崩一次、电视卡死 | 主页桥 manifest 的 Activity 名和编译的类不一致 | `pm uninstall --user 0 com.ts.launcher` 后重装正确包 |
 | 截图全黑 | 电视睡着了 | `input keyevent KEYCODE_WAKEUP` |
 | 截图是小米大时钟 | 屏保（约 30 秒） | 先 wakeup + HOME |
 | Netflix 报设备不兼容 | 无 GMS / 无 Widevine | 外接认证盒子 |
