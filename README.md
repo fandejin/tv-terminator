@@ -36,6 +36,7 @@ cp -r skills/xiaomi-tv-setup ~/.hermes/skills/devops/
 |---|---|---|
 | [小米电视改造](docs/xiaomi-tv.md) | 换掉广告桌面、装 YouTube/影视/浏览器、系统精简、电视看抖音 | ✅ 已落地实操 |
 | [Home 键替身](homekey-standin/README.md) | **CleanYourTV / Aerial TV 都没搞定的「小米电视 Home 键」问题**，这里解决了：按 Home 零闪烁 | ✅ 真机验证 |
+| [Aerial 方向键补丁](docs/aerial-row-wrap.md) | 应用网格里 `→` 到行末自动进下一行（已提 PR #522） | ✅ 真机验证 |
 | [电视一键配置脚本](scripts/tv-setup.sh) | ADB 连接、架构检测、批量装 App、代理设置 | ✅ 可用 |
 
 ---
