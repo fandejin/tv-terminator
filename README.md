@@ -1,6 +1,10 @@
-# fandejin · 项目分享地
+# 电视终结者 · TV Terminator
 
-这里放我折腾过的东西——踩过的坑、修好的方案、能直接拿去用的脚本和配置。
+> 把小米电视从「开机看广告、桌面推广告、Home 键还得看它脸色」的机器，改回一台你想用的电视。
+
+这里放的是我在自己电视上**真跑通**的东西——踩过的坑、修好的方案、能直接拿去用的脚本和配置。不用 root，每一步都能退回去。
+
+**改造后你能得到**：开机没广告 · 桌面随便换 · 按 Home 键零闪烁 · YouTube 无广告 · 电视刷抖音 · 清掉一堆没用的系统服务
 
 ## 🚀 从这里开始
 
@@ -31,7 +35,7 @@ cp -r skills/xiaomi-tv-setup ~/.hermes/skills/devops/
 | 项目 | 说明 | 状态 |
 |---|---|---|
 | [小米电视改造](docs/xiaomi-tv.md) | 换掉广告桌面、装 YouTube/影视/浏览器、系统精简、电视看抖音 | ✅ 已落地实操 |
-| [Home 键替身](homekey-standin/README.md) | 2KB 零界面小 App，让按 Home 键不再闪原厂桌面 | ✅ 真机验证 |
+| [Home 键替身](homekey-standin/README.md) | **CleanYourTV / Aerial TV 都没搞定的「小米电视 Home 键」问题**，这里解决了：按 Home 零闪烁 | ✅ 真机验证 |
 | [电视一键配置脚本](scripts/tv-setup.sh) | ADB 连接、架构检测、批量装 App、代理设置 | ✅ 可用 |
 
 ---

@@ -15,7 +15,7 @@ metadata:
 > **你不是在念说明书，你是在当导游。**
 > 一次只推进一个阶段；每个阶段开头先把该问的问题问清楚，拿到答复再决定「执行」还是「跳过」；跳过必须说清楚后果。
 
-完整的单页图文（给用户自己看的版本）：<https://github.com/fadnejin/fandejin/blob/main/docs/quickstart.md>
+完整的单页图文（给用户自己看的版本）：<https://github.com/fadnejin/tv-terminator/blob/main/docs/quickstart.md>
 
 ---
 
@@ -308,7 +308,7 @@ startActivity(i); finish();
 
 效果：系统把桥当默认桌面（认），但桥不渲染 → 实测连抓 3 帧**没有任何小米桌面画面**，直接落在 Aerial。
 
-**现成工程（推荐直接用）**：<https://github.com/fadnejin/fandejin/tree/main/homekey-standin>
+**现成工程（推荐直接用）**：<https://github.com/fadnejin/tv-terminator/tree/main/homekey-standin>
 里面是 `build.sh`（不依赖 Gradle）+ 60 行源码 + 预编译 APK：
 
 ```bash
