@@ -201,9 +201,9 @@ adb shell am start -n app.orchard.tv/.MainActivity
 
 **✅ 验收**：出现底部玻璃 Dock + App 网格；从任意 App 按 Home 能回来
 
-### 2.2A Aerial 的 Home 键：先清冲突
+### 2.2A Aerial 的 Home 键：清冲突 + 别停系统桌面（小米关键）
 
-**坑**：如果电视上还留着别的桌面的无障碍服务，两个服务会**抢 Home 键**（按了没反应或乱跳）。
+**先清冲突**：如果电视上还留着别的桌面的无障碍服务，两个服务会**抢 Home 键**（按了没反应或乱跳）。
 
 ```bash
 # 看现在挂了几个
@@ -212,6 +212,36 @@ adb shell settings get secure enabled_accessibility_services
 # 只保留小爱 + Aerial 的 HomeGuardService，把旧的 HomeKeyService 去掉
 adb shell settings put secure enabled_accessibility_services "com.xiaomi.voicecontrol/.VoiceAccessibilityService:app.orchard.tv/app.orchard.tv.guard.HomeGuardService"
 ```
+
+**💣 小米特有的大坑：它忽略「设为默认桌面」**
+
+Aerial 官方文档原话是「默认桌面（只有 standard 版；**小米会忽略**）」。
+`set-home-activity` 会返回 `Success`，但实际不生效——Aerial 在小米上完全靠**无障碍守护拦 HOME 键**来当家。
+
+由此推出：
+
+- 按 Home 一定**先回小米桌面**，守护再抢回来 → 这就是那一下闪烁的来历
+- **不要给 Aerial 设 HOME role**：`cmd role add-role-holder android.app.role.HOME app.orchard.tv` 会让守护以为「我就是默认桌面」，从此不再拦截，按 Home 直接进小米桌面
+
+**两条路，让用户自己选：**
+
+| 路线 | 做法 | 代价 |
+|---|---|---|
+| **A. 忍一下闪** | 保持 `com.mitv.tvhome` 启用，只用 Aerial 自带的守护 | 每次按 Home 闪 0.5~1 秒小米桌面 |
+| **B. 零闪烁（推荐）** | 加装「主页桥」，见下面 2.2A-补 | 多装一个 2KB 的无界面小 App |
+
+**问用户：**「按 Home 的时候，中间闪一下小米桌面你能接受吗？」
+→ 能接受走 A，不能接受走 B。
+
+**改完 Aerial 要重启一次进程，守护才会按新状态接管：**
+
+```bash
+adb shell am force-stop app.orchard.tv
+adb shell am start -n app.orchard.tv/.MainActivity
+```
+
+**✅ 验收**：进任意 App → 按 Home → 回 Aerial。
+走 A 会看到小米桌面一闪；走 B 应当**完全看不到**。
 
 **✅ 验收**：`adb shell dumpsys accessibility | grep -i "Bound services"` 能看到 Home button，然后**拿遥控器实测**
 
@@ -250,6 +280,61 @@ adb shell settings put secure accessibility_enabled 1
 > ⚠️ ADB 注入的 `input keyevent 284` 走另一条输入链路，测不出来，别拿它当判据。
 
 **⏭ 跳过 2.2 的后果**：Home 键和设置键会失灵，只能靠返回键一层层退——这是最常见的投诉。
+
+### 2.2A-补 小米只认白名单包名 → 用「主页桥」实现 Home 零闪烁
+
+**现象**：Aerial 设成默认桌面无效，按 Home 必先闪小米桌面再跳回 Aerial。
+
+**实测结论（2026-10-24，MiTV-ASTR0）**：同样命令、同样条件下
+
+| 包名 | set-home 是否生效 |
+|---|---|
+| `com.ts.launcher` | ✅ 生效 |
+| `app.orchard.tv`（Aerial） | ❌ 退回 FallbackHome |
+| `com.finn.homebridge`（随便起的） | ❌ 退回 FallbackHome |
+
+→ 不是 manifest/权限/签名问题（两者声明几乎一致），是小米 ROM **按包名放行**。
+
+**解法：自建「主页桥」**——一个 2KB 无界面 App，包名用 `com.ts.launcher`：
+
+```java
+// Theme.NoDisplay，不画任何东西；收到 HOME 立刻拉起 Aerial 后 finish()
+Intent i = new Intent(Intent.ACTION_MAIN);
+i.addCategory(Intent.CATEGORY_LAUNCHER);
+i.setComponent(new ComponentName("app.orchard.tv", "app.orchard.tv.MainActivity"));
+i.addFlags(FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+startActivity(i); finish();
+```
+
+效果：系统把桥当默认桌面（认），但桥不渲染 → 实测连抓 3 帧**没有任何小米桌面画面**，直接落在 Aerial。
+
+**现成工程（推荐直接用）**：<https://github.com/fadnejin/fandejin/tree/main/homekey-standin>
+里面是 `build.sh`（不依赖 Gradle）+ 60 行源码 + 预编译 APK：
+
+```bash
+./build.sh --pkg com.ts.launcher \
+           --target-pkg app.orchard.tv --target-class app.orchard.tv.MainActivity
+adb install -r dist/homekey-standin-com_ts_launcher.apk
+adb shell cmd package set-home-activity --user 0 \
+  com.ts.launcher/com.gathin.tvhome.MainActivity
+```
+
+**✅ 验收**：
+
+```bash
+# 1. 系统解析到的桌面应该是桥
+adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME
+# ↑ 必须返回 com.ts.launcher/...，返回 FallbackHome 就是没成
+
+# 2. 连抓 3 帧，字节数应当完全一致（证明中间没有别的画面）
+adb shell input keyevent 3; adb exec-out screencap -p > /tmp/t0.png
+adb exec-out screencap -p > /tmp/t1.png
+```
+
+**配套状态**：桥生效（第 1 步验收通过）之后，`com.mitv.tvhome` 才可以用 `disable-user` 停掉；
+顺序反了会掉进 `FallbackHome` 黑屏。重启后桥依然有效。
+
+**回退**：卸载 `com.ts.launcher` → 系统自动退回小米桌面。
 
 ### 2.2.1 重启后掉了怎么办（必讲）
 
@@ -493,6 +578,8 @@ adb shell "dumpsys activity activities | grep -m1 topResumedActivity"
 | 按 Home 没反应 | 小米遥控器发 ALL_APPS | 阶段 2.2 |
 | 按 Home 跳回小米桌面 | 默认桌面被改回 | 重设 + 再 disable |
 | 白屏没桌面 | 原桌面停了但新桌面没设上 | `set-home-activity` 救回 |
+| 按 Home 黑屏一下才回来 | 系统桌面被停用，掉进 FallbackHome | `pm enable com.mitv.tvhome`，重启 Aerial |
+| Aerial 按 Home 进了小米桌面 | 给 Aerial 设了 HOME role，守护不拦了 | `cmd role remove-role-holder android.app.role.HOME app.orchard.tv` |
 | YouTube 转圈（仅第 5 阶段） | 代理没通 / IP 填错 | 确认代理地址与端口 |
 | TVBro 全白 | 主页漏 `https://` | 补全协议 |
 | 截图全黑 | 电视睡着了 | `input keyevent KEYCODE_WAKEUP` |
