@@ -334,6 +334,16 @@ adb exec-out screencap -p > /tmp/t1.png
 **配套状态**：桥生效（第 1 步验收通过）之后，`com.mitv.tvhome` 才可以用 `disable-user` 停掉；
 顺序反了会掉进 `FallbackHome` 黑屏。重启后桥依然有效。
 
+**💣 装完必须看一眼崩溃（踩过）：** 如果桥的 manifest 里 Activity 名和 jar 里编出来的类不一致，
+系统一拉就 `ClassNotFoundException`，然后**每 ~150ms 起一次进程、无限重启**，电视直接卡死（遥控器全无反应，负载 4.0）。
+
+```bash
+adb logcat -d | grep -c ClassNotFoundException   # 必须是 0
+adb shell cat /proc/loadavg                       # 正常应在 1~2
+```
+
+崩了就这样救：`pm uninstall --user 0 com.ts.launcher` → 重新装正确构建的 APK → `set-home-activity`。
+
 **回退**：卸载 `com.ts.launcher` → 系统自动退回小米桌面。
 
 ### 2.2.1 重启后掉了怎么办（必讲）
