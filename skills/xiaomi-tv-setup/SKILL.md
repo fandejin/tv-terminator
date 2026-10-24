@@ -376,6 +376,28 @@ if (rowStart && prevRowLast != null) left = prevRowLast
 2. 国内网络：Gradle 发行包从 `mirrors.cloud.tencent.com/gradle/` 下；依赖在 `settings.gradle.kts` 里把 `maven.aliyun.com` 放最前；`compileSdk=36` 要先 `sdkmanager "platforms;android-36"`。
 3. 没有官方签名密钥 → 只能用 debug key 签，**装之前必须卸载原版**，设置（壁纸/天气/Dock 顺序）会清空。改完先备份 APK。
 
+### 2.4 把天气城市改成上海（手机不同网络也能改）
+
+Aerial 的天气默认按**出口 IP** 定位——挂了代理就显示东京。手机上扫码改是最顺的路，
+但如果手机不在同一网络，直接调它自带的手机页面 API 就行：
+
+1. 遥控器按 **MENU → 控制中心 → 个性化**，右侧会出现二维码
+2. 截图并解出 token：
+   ```bash
+   adb exec-out screencap -p > /tmp/q.png
+   # 用 zxing-cpp 解码，得到 http://<电视IP>:8790/<token>/
+   ```
+3. POST 城市名（**从 Windows 侧发**，WSL 直连电视 8790 常常不通）：
+   ```powershell
+   curl.exe -s -X POST "http://<电视IP>:8790/<token>/api/weather/city" --data "name=%E4%B8%8A%E6%B5%B7"
+   ```
+   中文用 URL 编码：上海 = `%E4%B8%8A%E6%B5%B7`
+4. 返回 JSON 里看到 `"weather":{"place":"上海","chosen":true,...}` 就成了。
+   **`chosen:true` 后不会再被 IP 定位覆盖**，换代理也不会跳回东京。
+
+> 顺手记住：`/api/state` 能看到桌面全部配置；`/api/weather/auto` 是改回自动定位。
+> token 每次 App 重启都会变，过期就重新截图解一次。
+
 ### 2.2.1 重启后掉了怎么办（必讲）
 
 小米系统偶尔会把非系统应用的**无障碍服务悄悄关掉**（系统清理、升级、恢复出厂都会），表现为「昨天好好的，今天 Home 又没反应」。
