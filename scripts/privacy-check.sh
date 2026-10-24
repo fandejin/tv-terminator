@@ -19,7 +19,7 @@ if grep -rnEI "$IP_RE" . "${GREP_OPTS[@]}" >/dev/null 2>&1; then
 fi
 
 # 2. 本机绝对路径（/home/<名字>/ 或 C:\Users\<名字>\；占位符 <你> 不算）
-PATH_RE='(^|[^A-Za-z0-9_/])/home/[a-z0-9_-]+/|C:\\\\Users\\\\[^<]'
+PATH_RE='(^|[^A-Za-z0-9_/])/home/[a-z0-9_-]+/|/Users/[A-Za-z0-9_-]+/|C:\\Users\\[A-Za-z0-9_-]+'
 if grep -rnEI "$PATH_RE" . "${GREP_OPTS[@]}" >/dev/null 2>&1; then
   grep -rnEI "$PATH_RE" . "${GREP_OPTS[@]}" | head -20
   say "发现本机绝对路径/用户名（应写成 ~/ 或 <路径>）"
