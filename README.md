@@ -31,6 +31,7 @@ cp -r skills/xiaomi-tv-setup ~/.hermes/skills/devops/
 | 项目 | 说明 | 状态 |
 |---|---|---|
 | [小米电视改造](docs/xiaomi-tv.md) | 换掉广告桌面、装 YouTube/影视/浏览器、系统精简、电视看抖音 | ✅ 已落地实操 |
+| [Home 键替身](homekey-standin/README.md) | 2KB 零界面小 App，让按 Home 键不再闪原厂桌面 | ✅ 真机验证 |
 | [电视一键配置脚本](scripts/tv-setup.sh) | ADB 连接、架构检测、批量装 App、代理设置 | ✅ 可用 |
 
 ---
