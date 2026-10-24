@@ -16,6 +16,17 @@
 | 系统精简 | 停用 8 个小米自家服务（**没动任何第三方 App**） |
 | 网络 | 电视走电脑 clash 代理，实现看 YouTube |
 
+<p align="center">
+  <img src="../assets/launcher-home.png" width="760" alt="改造后的桌面"><br>
+  <sub>改造后的桌面：干净的 App 网格 + 天气信息，没有广告位</sub>
+</p>
+
+<p align="center">
+  <img src="../assets/smarttube.png" width="760" alt="SmartTube"><br>
+  <sub>SmartTube 正常加载推荐（走电脑代理出去）</sub>
+</p>
+
+
 ---
 
 ## 二、前提条件
