@@ -35,7 +35,7 @@ cp -r skills/xiaomi-tv-setup ~/.hermes/skills/devops/
 | 项目 | 说明 | 状态 |
 |---|---|---|
 | [小米电视改造](docs/xiaomi-tv.md) | 换掉广告桌面、装 YouTube/影视/浏览器、系统精简、电视看抖音 | ✅ 已落地实操 |
-| [Home 键替身](homekey-standin/README.md) | **CleanYourTV / Aerial TV 都没搞定的「小米电视 Home 键」问题**，这里解决了：按 Home 零闪烁 | ✅ 真机验证 |
+| [Home 键替身](homekey-standin/README.md) | **CleanYourTV / Aerial TV 都没搞定的「小米电视 Home 键」问题**，这里解决了：按 Home 零闪烁（**也单独发布了：[homekey-standin](https://github.com/fandejin/homekey-standin)**，只需要这个功能的可以直接下 APK） | ✅ 真机验证 |
 | [Aerial 方向键补丁](docs/aerial-row-wrap.md) | 应用网格里 `→` 到行末自动进下一行（已提 PR #522） | ✅ 真机验证 |
 | [Aerial 最近使用排序](docs/aerial-recent-order.md) | 桌面图标按最后一次打开的时间排，常用的自动往前 | ✅ 真机验证 |
 | [2026-10-25 会话记录](docs/session-log-2026-10-25.md) | 这一轮改了啥、踩了哪些坑、留下的资产清单 | 📝 存档 |
